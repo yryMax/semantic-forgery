@@ -24,7 +24,6 @@ from utils.prompt_utils import PROMPTS_SD_LIST, PROMPTS_I2P_LIST
 
 from utils.utils import set_random_seed
 
-
 # device
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -35,9 +34,9 @@ parser = argparse.ArgumentParser(description="reprompt", parents=[gs_parser, tr_
 parser.add_argument("--out_dir", type=str, default="out/reprompt/")
 
 # prompts
-parser.add_argument("--target_prompt_index", type=int, default=0, choices=list(range(len(PROMPTS_SD_LIST))))
+parser.add_argument("--target_prompt_index", type=int, default=4, choices=list(range(len(PROMPTS_SD_LIST))))
 parser.add_argument("--target_prompt", type=str, default=None)
-parser.add_argument("--attacker_prompt_index", type=int, default=0, choices=list(range(len(PROMPTS_I2P_LIST))))
+parser.add_argument("--attacker_prompt_index", type=int, default=4, choices=list(range(len(PROMPTS_I2P_LIST))))
 parser.add_argument("--attacker_prompt", type=str, default=None)
 
 # target model
@@ -77,7 +76,7 @@ attacker_prompt = PROMPTS_I2P_LIST[args.attacker_prompt_index] if args.attacker_
 # add full prompt datasets here if you like
 
 # attacker model
-pipe_provider_target = pipe_utils.get_pipe_provider(pretrained_model_name_or_path=args.modelid_target,
+pipe_provider_target = pipe_utils.get_pipe_provider(pretrained_model_name_or_path="PixArt-alpha/PixArt-Sigma-XL-2-512-MS",
                                                     resolution=args.resolution,
                                                     schedulers_name=args.scheduler_target,
                                                     unet_id_or_checkpoint_dir=None,
@@ -86,7 +85,7 @@ pipe_provider_target = pipe_utils.get_pipe_provider(pretrained_model_name_or_pat
                                                     eager_loading=True if "FLUX" in args.modelid_target else False,
                                                     disable_tqdm=True
                                                     )  # finetuned model
-pipe_provider_attacker = pipe_utils.get_pipe_provider(pretrained_model_name_or_path=args.modelid_attacker,
+pipe_provider_attacker = pipe_utils.get_pipe_provider(pretrained_model_name_or_path="PixArt-alpha/PixArt-Sigma-XL-2-512-MS",
                                                       resolution=args.resolution,
                                                       device=DEVICE,
                                                       eager_loading=False,
