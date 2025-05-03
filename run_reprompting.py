@@ -57,7 +57,7 @@ parser.add_argument("--guidance_scale_attacker", type=float, default=7.5)
 parser.add_argument("--resolution", type=int, default=512)
 parser.add_argument("--wm_type",
                     type=str,
-                    default="GS",
+                    default="PRC",
                     choices=[wm.name for wm in WmProviders])
 parser.add_argument("--seed", type=int, default=1)
 parser.add_argument("--resample", action="store_true", default=False)
@@ -133,7 +133,7 @@ with torch.no_grad():
     # check if detection was successfull
     detection_successful = check_if_detection_successful(wm_type=args.wm_type,
                                                          threshold=detection_threshold,
-                                                         value=results["bit_accuracy"] if args.wm_type == "GS" else results["p_value"])
+                                                         value=results["bit_accuracy"] if args.wm_type == "GS" or "PRC" else results["p_value"])
     results["detection_successful"] = detection_successful
     rows.append(results)
 
@@ -173,7 +173,7 @@ with torch.no_grad():
     # collect metrics
     results = validate(
         out_dir=out_dir,
-        image_to_verify_PIL=harmful_image,
+        image_to_verify_PIL=benign_image,
         original_PIL=benign_image,
         wm_provider=wm_provider,
         pipe_provider_target=pipe_provider_target,
@@ -185,7 +185,7 @@ with torch.no_grad():
     # check if detection was successfull
     detection_successful = check_if_detection_successful(wm_type=args.wm_type,
                                                          threshold=detection_threshold,
-                                                         value=results["bit_accuracy"] if args.wm_type == "GS" else results["p_value"])
+                                                         value=results["bit_accuracy"] if args.wm_type == "GS" or "PRC" else results["p_value"])
     results["detection_successful"] = detection_successful
     rows.append(results)
 

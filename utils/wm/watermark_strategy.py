@@ -81,7 +81,7 @@ class PRCWatermark(WatermarkStrategy, WmProvider):
                  basis=None,
                  **kwargs
                  ):
-        WmProvider.__init__(**kwargs)
+        WmProvider.__init__(self, **kwargs)
         self.fpr = fpr
         self.prc_t = prc_t
         self.latent_length = letent_length  # 4 * 64 * 64
@@ -95,6 +95,7 @@ class PRCWatermark(WatermarkStrategy, WmProvider):
 
         ### will refresh for each call
         self.message = None
+        self.messages = None
 
         assert math.prod(
             self.latent_shape) == self.latent_length, f"latent_shape {self.latent_shape} is not consistent with latent_length {self.latent_length}"
@@ -144,20 +145,22 @@ class PRCWatermark(WatermarkStrategy, WmProvider):
         """
         latents_torch = []
         message_bits_str_list = []
+        messages = []
         for _ in range(0, self.batch_size):
             latent_torch = self.get_init_latent(dim=self.latent_shape).to(self.device)
             # remember the message bits as string
             message_bits_str_list.append(''.join(str(int(bit)) for bit in self.message))
+            messages.append(self.message)
 
             latents_torch.append(latent_torch.squeeze(0))
 
         # finalize
         latents_torch = torch.stack(latents_torch, dim=0)
 
-        results_dict = {"zT_torch": latents_torch,
+        results_dict = {"zT_torch": latents_torch.float(),
                         "message_bits_str_list": message_bits_str_list
                         }
-
+        self.messages = messages
         return results_dict
 
     def get_accuracies(self, latents: typing.Union[torch.Tensor, np.array]) -> typing.Dict[str, any]:
@@ -173,13 +176,23 @@ class PRCWatermark(WatermarkStrategy, WmProvider):
         recovered_message_bits_str_list = []
 
         for i in range(0, self.batch_size):
-            bit_accuracy = self.detect(latents[i].unsqueeze(0))
+            #print(f"bit accuracy: {bit_accuracy}")
+            #print(f"message: {self.message}")
+            #print(f"latent: {latents[i]}")
 
             posteriors = self.recover_posteriors(latents[i].flatten().cpu())
             msg_numpy_array = self.decode(posteriors)
 
-            bit_accuracies.append(bit_accuracy)
-            recovered_message_bits_str_list.append(''.join(str(int(bit)) for bit in msg_numpy_array))
+            if msg_numpy_array is not None:
+                bit_acc = (msg_numpy_array[:len(self.messages[i])] == self.messages[i]).sum() / len(self.messages[i])
+            else:
+                bit_acc = 0
+
+            bit_accuracies.append(bit_acc)
+            if msg_numpy_array is None:
+                recovered_message_bits_str_list.append(None)
+            else:
+                recovered_message_bits_str_list.append(''.join(str(int(bit)) for bit in msg_numpy_array))
 
         return {
             "accuracies": bit_accuracies,
@@ -221,7 +234,7 @@ class PRCWatermark(WatermarkStrategy, WmProvider):
         :param reversed_w: the reversed latent, we want to detect the watermark in it
         :return: the probability of the watermark existing in the latent
         """
-        posteriors = self.recover_posteriors(reversed_w)
+        posteriors = self.recover_posteriors(reversed_w.flatten())
 
         recovered_message = self.decode(posteriors)
 

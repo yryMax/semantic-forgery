@@ -56,6 +56,8 @@ def check_if_detection_successful(wm_type: str, threshold: float, value: float) 
         return value > threshold
     elif wm_type == "TR":
         return value < threshold
+    if wm_type == "PRC":
+            return value > threshold
     else:
         raise ValueError("Unknown watermark type")
 
