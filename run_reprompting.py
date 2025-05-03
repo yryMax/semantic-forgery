@@ -2,7 +2,7 @@
 Script to run the reprompting attack.
 """
 
-
+import typing
 import os
 
 import torch
@@ -85,7 +85,7 @@ pipe_provider_target = pipe_utils.get_pipe_provider(pretrained_model_name_or_pat
                                                     eager_loading=True if "FLUX" in args.modelid_target else False,
                                                     disable_tqdm=True
                                                     )  # finetuned model
-pipe_provider_attacker = pipe_utils.get_pipe_provider(pretrained_model_name_or_path="PixArt-alpha/PixArt-Sigma-XL-2-512-MS",
+pipe_provider_attacker = pipe_utils.get_pipe_provider(pretrained_model_name_or_path="stabilityai/stable-diffusion-2-1-base",
                                                       resolution=args.resolution,
                                                       device=DEVICE,
                                                       eager_loading=False,
